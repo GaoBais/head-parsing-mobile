@@ -1,0 +1,1 @@
+run_id,platform,device,os_version,soc,ram_gb,app_build,model_artifact,artifact_sha256,backend,input_size,precision,warmup_frames,measured_frames,model_p50_ms,model_p90_ms,model_p95_ms,model_p99_ms,model_mean_ms,model_min_ms,model_max_ms,preprocess_mean_ms,postprocess_mean_ms,end_to_end_mean_ms,peak_memory_mb,thermal_state,notes

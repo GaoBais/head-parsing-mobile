@@ -1,0 +1,31 @@
+dataset:
+  name: celebamask_hq
+  num_classes: 19
+  raw_root: data/raw/celebamask_hq
+  processed_root: data/processed/celebamask_hq
+  image_dir: data/processed/celebamask_hq/images
+  mask_dir: data/processed/celebamask_hq/masks
+  splits:
+    train: data/splits/train.txt
+    val: data/splits/val.txt
+    test: data/splits/test.txt
+  classes:
+    - background
+    - skin
+    - l_brow
+    - r_brow
+    - l_eye
+    - r_eye
+    - eye_g
+    - l_ear
+    - r_ear
+    - ear_r
+    - nose
+    - mouth
+    - u_lip
+    - l_lip
+    - neck
+    - neck_l
+    - cloth
+    - hair
+    - hat

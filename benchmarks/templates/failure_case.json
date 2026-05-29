@@ -1,0 +1,16 @@
+{
+  "case_id": "",
+  "platform": "",
+  "device": "",
+  "backend": "",
+  "model_artifact": "",
+  "artifact_sha256": "",
+  "input_source": "",
+  "failure_class": "",
+  "note": "",
+  "files": {
+    "input": "",
+    "mask": "",
+    "overlay": ""
+  }
+}

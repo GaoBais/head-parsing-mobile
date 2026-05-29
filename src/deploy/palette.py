@@ -1,0 +1,46 @@
+"""Class names and visualization palette for CelebAMask-HQ style parsing."""
+
+CLASS_NAMES = [
+    "background",
+    "skin",
+    "l_brow",
+    "r_brow",
+    "l_eye",
+    "r_eye",
+    "eye_g",
+    "l_ear",
+    "r_ear",
+    "ear_r",
+    "nose",
+    "mouth",
+    "u_lip",
+    "l_lip",
+    "neck",
+    "neck_l",
+    "cloth",
+    "hair",
+    "hat",
+]
+
+PALETTE = [
+    [0, 0, 0],
+    [255, 85, 0],
+    [255, 170, 0],
+    [255, 0, 85],
+    [255, 0, 170],
+    [0, 255, 0],
+    [85, 255, 0],
+    [170, 255, 0],
+    [0, 255, 85],
+    [0, 255, 170],
+    [0, 0, 255],
+    [85, 0, 255],
+    [170, 0, 255],
+    [0, 85, 255],
+    [0, 170, 255],
+    [255, 255, 0],
+    [255, 255, 85],
+    [255, 255, 170],
+    [255, 0, 255],
+]
+

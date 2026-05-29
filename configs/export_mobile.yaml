@@ -1,0 +1,21 @@
+export:
+  checkpoint: outputs/train/best.pt
+  input_size: [320, 320]
+  formats:
+    onnx:
+      enabled: true
+      opset: 17
+      output: weights/head_parsing_mobile_320.onnx
+    tflite:
+      enabled: true
+      precision: fp16
+      output: weights/head_parsing_mobile_320_fp16.tflite
+    coreml:
+      enabled: true
+      precision: fp16
+      minimum_deployment_target: ios15
+      output: weights/HeadParsingMobile320.mlpackage
+  validation:
+    compare_outputs: true
+    max_abs_error: 0.02
+    check_mobile_ops: true

@@ -1,0 +1,12 @@
+# Linux CUDA/server environment. Prefer Python 3.10 or 3.11.
+torch>=2.2
+torchvision>=0.17
+numpy>=1.24
+pillow>=10.0
+opencv-python>=4.8
+tqdm>=4.66
+PyYAML>=6.0
+onnx>=1.16
+onnxruntime>=1.17
+litert-torch>=0.9
+coremltools>=8.0
