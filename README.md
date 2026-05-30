@@ -23,6 +23,7 @@
 - [项目目录结构](docs/project_structure.md)
 - [实现进度记录](docs/progress.md)
 - [设备 benchmark 协议](docs/benchmark_protocol.md)
+- [移动端集成说明](docs/mobile_integration.md)
 
 ## 目录概览
 
@@ -170,6 +171,15 @@ python tools/inspect_artifacts.py \
   weights/head_parsing_mobile_320_teeth_fp16.tflite \
   weights/HeadParsingMobile320Teeth.mlpackage \
   --output benchmarks/runs/latest/artifact_manifest.json
+```
+
+TFLite smoke test：
+
+```bash
+python tools/tflite_smoke_test.py \
+  --model weights/head_parsing_mobile_320_teeth_fp16.tflite \
+  --image data/processed/mouth2teeth/images/107.jpg \
+  --output-dir outputs/tflite_smoke_mouth2teeth_v2
 ```
 
 ## 可视化工具

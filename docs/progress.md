@@ -11,7 +11,7 @@ Status values:
 
 ## Task Summary
 
-Total tasks: 12
+Total tasks: 15
 
 | ID | Task | Status | Progress | Deliverable |
 | --- | --- | --- | --- | --- |
@@ -27,6 +27,9 @@ Total tasks: 12
 | T10 | LiteRT/TFLite export | in_progress | 70% | FP16 TFLite model |
 | T11 | Core ML export | in_progress | 70% | FP16 mlpackage |
 | T12 | Device benchmark protocol | done | 100% | Android/iOS benchmark checklist |
+| T13 | Mouth2teeth class extension | done | 100% | 20-class configs and preprocessing support |
+| T14 | Mouth2teeth evaluation report | done | 100% | metrics summary and visual report |
+| T15 | TFLite smoke test and mobile integration guide | done | 100% | smoke-test tool, metadata, integration doc |
 
 ## Current Notes
 
@@ -34,6 +37,7 @@ Total tasks: 12
 - `../face-parsing` remains useful as a teacher/baseline reference.
 - Local Windows is the development environment only. It has host Python 3.13.7 at `C:\Users\hengx\AppData\Local\Programs\Python\Python313\python.exe`, but no NVIDIA GPU is expected. Use host Python for local checks; run full CUDA training later on the Linux server.
 - Local PyTorch is not installed. Non-PyTorch tests run locally; PyTorch/ONNX-dependent model/loss/distillation/export tests are present but skipped until PyTorch is available on the server or local CPU environment.
+- TFLite smoke-test code and docs are locally verified, but this Windows environment does not have a TFLite/LiteRT Python runtime. Run the actual `.tflite` inference smoke test in the server export environment or on device.
 
 ## Change Log
 
@@ -54,3 +58,5 @@ Total tasks: 12
 - 2026-05-30: Added `teeth` as class ID 19 while preserving the original CelebAMask-HQ class order, updated 20-class model/dataset/training configs, disabled default teacher distillation for the 20-class student, added mouth2teeth dataset/training configs, and made preprocessing ignore zero-area attribute masks.
 - 2026-05-30: Hardened TFLite export converter loading: `litert_torch` import compatibility failures now fall back to `ai_edge_torch` in `auto` mode, and `scripts/export_tflite.py` accepts `--converter auto|litert_torch|ai_edge_torch`.
 - 2026-05-30: Documented the server training command with `PYTHONUNBUFFERED=1`, `python -u`, and `tee outputs/<run_id>/train.log` so future runs preserve logs required for training-curve reports.
+- 2026-05-30: Added a mouth2teeth evaluation report with per-class IoU chart, focused mouth/teeth/lip chart, sample gallery, and artifact manifest.
+- 2026-05-30: Completed T15 code/documentation by adding TFLite smoke-test tooling, 20-class mobile metadata, README entry points, and Android/iOS integration guidance. Local `python -m unittest discover -s tests`, static compilation, CLI help, and metadata JSON checks passed; full `.tflite` inference requires a LiteRT/TFLite runtime on server or device.
