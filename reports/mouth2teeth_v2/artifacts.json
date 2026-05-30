@@ -1,0 +1,23 @@
+[
+  {
+    "name": "head_parsing_mobile_320_teeth_best.pt",
+    "path": "weights/head_parsing_mobile_320_teeth_best.pt",
+    "size_bytes": 20928678,
+    "size_mb": 19.96,
+    "sha256": "2bcfc8660feb9ffbb1d01a220d9630cfbf4a4a5407290b41fecea7a55677da01"
+  },
+  {
+    "name": "head_parsing_mobile_320_teeth.onnx",
+    "path": "weights/head_parsing_mobile_320_teeth.onnx",
+    "size_bytes": 10305144,
+    "size_mb": 9.83,
+    "sha256": "a6a16ceeeeba766454ea7bc763d5c1161fc6524a8d42c528b2d97441c4239a86"
+  },
+  {
+    "name": "head_parsing_mobile_320_teeth_fp16.tflite",
+    "path": "weights/head_parsing_mobile_320_teeth_fp16.tflite",
+    "size_bytes": 10428880,
+    "size_mb": 9.95,
+    "sha256": "34b2d2f63e9a9b05024cb837a496cd27f16381accc88c42d27931cfc2a2cc4b9"
+  }
+]
