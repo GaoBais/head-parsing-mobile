@@ -1,0 +1,12 @@
+.gradle/
+.idea/
+build/
+local.properties
+captures/
+
+app/build/
+app/src/main/assets/*.jpg
+app/src/main/assets/*.jpeg
+app/src/main/assets/*.png
+app/src/main/assets/*.tflite
+!app/src/main/assets/.gitkeep

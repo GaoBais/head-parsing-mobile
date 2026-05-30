@@ -25,6 +25,7 @@
 - [设备 benchmark 协议](docs/benchmark_protocol.md)
 - [移动端集成说明](docs/mobile_integration.md)
 - [Android TFLite 集成基线](docs/android_tflite_integration.md)
+- [Android 最小 Demo](android-demo/README.md)
 
 ## 目录概览
 
@@ -38,6 +39,7 @@ head-parsing-mobile/
   tests/         单元测试和 smoke test
   tools/         数据检查、benchmark 和转换辅助工具
   examples/      移动端接入示例代码
+  android-demo/   Android TFLite 最小验证工程
   benchmarks/    设备 benchmark 模板与运行记录
   weights/       本地 checkpoint 和导出模型
   outputs/       训练日志、评估报告和可视化样例
@@ -185,6 +187,8 @@ python tools/tflite_smoke_test.py \
 ```
 
 Android 端集成基线见 `docs/android_tflite_integration.md` 和 `examples/android/HeadParsingTflite.kt`。
+
+Android 最小 demo 工程见 `android-demo/`。运行前需要把 `.tflite` 模型和一张测试图复制到 `android-demo/app/src/main/assets/`。
 
 ## 可视化工具
 
