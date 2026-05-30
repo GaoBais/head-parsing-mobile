@@ -22,7 +22,7 @@ HeadParsingMobile
 Input: 320x320 RGB
 Encoder: MobileNetV2 1.0 or MobileNetV3-Large 0.75
 Decoder: LR-ASPP-lite or Fast-SCNN style lightweight decoder
-Output: 19-class logits
+Output: 20-class logits
 Deployment: FP16 LiteRT/TFLite + FP16 Core ML
 ```
 
@@ -53,6 +53,8 @@ BiSeNet + ResNet18/ResNet34 + 448/512 input
 - teacher model，用于蒸馏移动端 student。
 - 数据处理和可视化参考。
 
+注意：原始 19 类 teacher checkpoint 不能直接蒸馏追加 `teeth` 后的 20 类 student。训练 mouth2teeth 子集时应关闭 teacher，或先准备同样 20 类输出的 teacher。
+
 它不适合作为最终移动端实时主模型，原因是 ResNet backbone 参数量和计算量偏大，且不是移动端算子最优结构。
 
 ## 4. 数据集设计
@@ -61,10 +63,10 @@ BiSeNet + ResNet18/ResNet34 + 448/512 input
 
 - CelebAMask-HQ
 - 约 30,000 张高质量人脸图像
-- 19 类 face/head parsing 标签
+- 默认 CelebAMask-HQ 为 19 类 face/head parsing 标签；mouth2teeth 子集追加 teeth 后为 20 类
 - 原始标签是按属性拆分的二值 mask，需要合成为单张 class-id mask
 
-建议保留 19 类输出，便于兼容原始 CelebAMask-HQ 标注：
+当前项目保留原始 19 类顺序，并将 `teeth` 追加为第 20 类：
 
 | ID | Class |
 | --- | --- |
@@ -87,6 +89,7 @@ BiSeNet + ResNet18/ResNet34 + 448/512 input
 | 16 | cloth |
 | 17 | hair |
 | 18 | hat |
+| 19 | teeth |
 
 ## 5. 数据预处理
 

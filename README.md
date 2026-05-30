@@ -9,6 +9,7 @@
 - 任务：实时人头/人脸语义分割
 - 输入：RGB 图像，默认尺寸为 `320x320`
 - 输出：逐像素类别 logits 或 mask
+- 类别：20 类，保持原 CelebAMask-HQ 19 类顺序，并在最后追加 `teeth`
 - 训练环境：Linux 服务器，使用 CUDA
 - 部署环境：Android LiteRT/TFLite 与 iOS Core ML
 - 主要数据集：CelebAMask-HQ
@@ -78,6 +79,31 @@ python scripts/train.py \
 python scripts/train.py --device cuda --disable-teacher
 ```
 
+训练包含 `teeth` 的 mouth2teeth 子集：
+
+```bash
+python scripts/train.py \
+  --model-config configs/model_mobilev2_lraspp_320.yaml \
+  --dataset-config configs/dataset_mouth2teeth.yaml \
+  --train-config configs/train_mouth2teeth.yaml \
+  --output-dir outputs/train_mouth2teeth \
+  --device cuda
+```
+
+如果后续需要绘制训练 loss、val mIoU 等曲线，必须保存完整终端日志。建议使用带 `tee` 的命令启动新一轮训练：
+
+```bash
+RUN_ID=train_mouth2teeth_v3
+mkdir -p outputs/$RUN_ID
+
+PYTHONUNBUFFERED=1 python -u scripts/train.py \
+  --model-config configs/model_mobilev2_lraspp_320.yaml \
+  --dataset-config configs/dataset_mouth2teeth.yaml \
+  --train-config configs/train_mouth2teeth.yaml \
+  --output-dir outputs/$RUN_ID \
+  --device cuda 2>&1 | tee outputs/$RUN_ID/train.log
+```
+
 ## 评估
 
 ```bash
@@ -95,7 +121,7 @@ python scripts/evaluate.py \
 ```bash
 python scripts/export_onnx.py \
   --checkpoint outputs/train/best.pt \
-  --output weights/head_parsing_mobile_320.onnx \
+  --output weights/head_parsing_mobile_320_teeth.onnx \
   --device cpu
 ```
 
@@ -106,8 +132,22 @@ pip install -r requirements-server.txt
 
 python scripts/export_tflite.py \
   --checkpoint outputs/train/best.pt \
-  --output weights/head_parsing_mobile_320_fp16.tflite \
+  --output weights/head_parsing_mobile_320_teeth_fp16.tflite \
   --precision fp16 \
+  --converter auto \
+  --device cpu
+```
+
+如果 `litert_torch` 与当前 PyTorch 版本不兼容，可以安装 legacy converter 后强制使用：
+
+```bash
+python scripts/export_tflite.py \
+  --checkpoint outputs/train_mouth2teeth_v2/best.pt \
+  --model-config configs/model_mobilev2_lraspp_320.yaml \
+  --export-config configs/export_mobile.yaml \
+  --output weights/head_parsing_mobile_320_teeth_fp16.tflite \
+  --precision fp16 \
+  --converter ai_edge_torch \
   --device cpu
 ```
 
@@ -116,7 +156,7 @@ python scripts/export_tflite.py \
 ```bash
 python scripts/export_coreml.py \
   --checkpoint outputs/train/best.pt \
-  --output weights/HeadParsingMobile320.mlpackage \
+  --output weights/HeadParsingMobile320Teeth.mlpackage \
   --precision fp16 \
   --minimum-deployment-target ios15
 ```
@@ -127,8 +167,8 @@ python scripts/export_coreml.py \
 
 ```bash
 python tools/inspect_artifacts.py \
-  weights/head_parsing_mobile_320_fp16.tflite \
-  weights/HeadParsingMobile320.mlpackage \
+  weights/head_parsing_mobile_320_teeth_fp16.tflite \
+  weights/HeadParsingMobile320Teeth.mlpackage \
   --output benchmarks/runs/latest/artifact_manifest.json
 ```
 

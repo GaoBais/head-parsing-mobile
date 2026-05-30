@@ -20,6 +20,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--output", type=Path, default=None)
     parser.add_argument("--device", type=str, default="cpu")
     parser.add_argument("--precision", choices=["fp32", "fp16"], default=None)
+    parser.add_argument("--converter", choices=["auto", "litert_torch", "ai_edge_torch"], default="auto")
     parser.add_argument("--include-softmax", action="store_true")
     parser.add_argument("--report", type=Path, default=Path("outputs/export/tflite_report.json"))
     return parser.parse_args()
@@ -59,12 +60,12 @@ def main() -> None:
     precision = args.precision or str(get_nested(export_cfg, "export.formats.tflite.precision", "fp16"))
     include_softmax = bool(args.include_softmax or get_nested(model_cfg, "model.export.include_softmax", False))
 
-    converter_module = import_litert_torch_converter()
+    converter_module = import_litert_torch_converter(args.converter)
     config = TFLiteExportConfig(
         checkpoint=checkpoint,
         output=output,
         input_size=input_size,
-        num_classes=int(get_nested(model_cfg, "model.num_classes", 19)),
+        num_classes=int(get_nested(model_cfg, "model.num_classes", 20)),
         width_mult=float(get_nested(model_cfg, "model.encoder.width_mult", 1.0)),
         output_stride=int(get_nested(model_cfg, "model.encoder.output_stride", 16)),
         decoder_channels=int(get_nested(model_cfg, "model.decoder.channels", 128)),
@@ -72,8 +73,9 @@ def main() -> None:
         device=args.device,
         precision=precision,
         include_softmax=include_softmax,
+        converter=args.converter,
     )
-    exported_path = export_tflite(config)
+    exported_path = export_tflite(config, converter_module=converter_module)
     report = {
         "tflite_path": str(exported_path),
         "checkpoint": str(checkpoint),

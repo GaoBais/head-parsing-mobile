@@ -81,7 +81,11 @@ def merge_attribute_masks(mask_anno_dir: Path, image_id: int, output_path: Path)
             continue
 
         attr_mask = np.array(Image.open(attr_path).convert("L"))
-        mask[attr_mask > 0] = class_id
+        positive = attr_mask > 0
+        if not positive.any():
+            continue
+
+        mask[positive] = class_id
         found += 1
 
     Image.fromarray(mask).save(output_path)

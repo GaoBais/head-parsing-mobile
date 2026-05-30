@@ -14,7 +14,7 @@ class HeadParsingMobile(nn.Module):
 
     def __init__(
         self,
-        num_classes: int = 19,
+        num_classes: int = 20,
         width_mult: float = 1.0,
         output_stride: int = 16,
         decoder_channels: int = 128,
@@ -38,7 +38,7 @@ class HeadParsingMobile(nn.Module):
 
 
 def build_head_parsing_mobile(
-    num_classes: int = 19,
+    num_classes: int = 20,
     width_mult: float = 1.0,
     output_stride: int = 16,
     decoder_channels: int = 128,

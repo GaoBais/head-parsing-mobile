@@ -28,14 +28,16 @@ class VisualizationTests(unittest.TestCase):
             root = Path(tmp)
             image = np.zeros((16, 16, 3), dtype=np.uint8)
             mask = np.zeros((16, 16), dtype=np.uint8)
-            mask[4:12, 4:12] = 17
+            mask[4:12, 4:12] = 19
             image_path = root / "image.png"
             mask_path = root / "mask.png"
             Image.fromarray(image).save(image_path)
             Image.fromarray(mask).save(mask_path)
 
             grid = make_prediction_grid(image_path, mask_path)
+            histogram = mask_class_histogram(mask_path)
             self.assertEqual(grid.size[0], 48)
+            self.assertEqual(histogram["teeth"], 8 * 8)
 
 
 if __name__ == "__main__":

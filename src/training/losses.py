@@ -98,7 +98,7 @@ def label_boundary_mask(target: torch.Tensor, ignore_index: int = 255) -> torch.
 
 @dataclass
 class SegmentationLossConfig:
-    num_classes: int = 19
+    num_classes: int = 20
     ce_weight: float = 1.0
     dice_weight: float = 0.5
     boundary_weight: float = 0.2

@@ -7,8 +7,10 @@ same converter as `ai_edge_torch.convert`, so this module supports both names.
 
 from __future__ import annotations
 
+import importlib
 from dataclasses import dataclass
 from pathlib import Path
+from types import ModuleType
 
 import torch
 
@@ -20,7 +22,7 @@ class TFLiteExportConfig:
     checkpoint: Path
     output: Path
     input_size: tuple[int, int] = (320, 320)
-    num_classes: int = 19
+    num_classes: int = 20
     width_mult: float = 1.0
     output_stride: int = 16
     decoder_channels: int = 128
@@ -28,31 +30,44 @@ class TFLiteExportConfig:
     device: str = "cpu"
     precision: str = "fp16"
     include_softmax: bool = False
+    converter: str = "auto"
 
 
-def import_litert_torch_converter():
+def import_litert_torch_converter(preferred: str = "auto") -> ModuleType:
     """Import the PyTorch to LiteRT converter package."""
 
-    try:
-        import litert_torch
+    normalized = preferred.lower().replace("-", "_")
+    if normalized not in {"auto", "litert_torch", "ai_edge_torch"}:
+        raise ValueError(f"Unsupported TFLite converter: {preferred}")
 
-        return litert_torch
-    except ImportError:
-        pass
+    candidates = ["litert_torch", "ai_edge_torch"] if normalized == "auto" else [normalized]
+    errors: list[tuple[str, Exception]] = []
 
-    try:
-        import ai_edge_torch
+    for module_name in candidates:
+        try:
+            module = importlib.import_module(module_name)
+        except Exception as exc:  # Import can fail on torch/converter compatibility before module load completes.
+            errors.append((module_name, exc))
+            continue
 
-        return ai_edge_torch
-    except ImportError as exc:
-        raise RuntimeError(
-            "LiteRT Torch converter is required. Install `litert-torch` on the Linux server; "
-            "older environments may use `ai-edge-torch`."
-        ) from exc
+        if not hasattr(module, "convert"):
+            errors.append((module_name, RuntimeError(f"{module_name} does not expose convert().")))
+            continue
+
+        return module
+
+    details = "\n".join(f"- {name}: {type(exc).__name__}: {exc}" for name, exc in errors)
+    raise RuntimeError(
+        "Could not import a usable PyTorch to LiteRT/TFLite converter.\n"
+        f"Tried: {', '.join(candidates)}\n"
+        f"{details}\n"
+        "Use `--converter ai_edge_torch` if the legacy converter is installed, or use a separate CPU export "
+        "environment with converter-compatible PyTorch."
+    ) from (errors[-1][1] if errors else None)
 
 
-def export_tflite(config: TFLiteExportConfig) -> Path:
-    converter = import_litert_torch_converter()
+def export_tflite(config: TFLiteExportConfig, converter_module: ModuleType | None = None) -> Path:
+    converter = converter_module or import_litert_torch_converter(config.converter)
     device = torch.device(config.device)
     model_config = _to_onnx_like_config(config)
     model = build_model_from_export_config(model_config).to(device)

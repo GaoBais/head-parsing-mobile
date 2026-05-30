@@ -67,7 +67,7 @@ def main() -> None:
         checkpoint=checkpoint,
         output=output,
         input_size=input_size,
-        num_classes=int(get_nested(model_cfg, "model.num_classes", 19)),
+        num_classes=int(get_nested(model_cfg, "model.num_classes", 20)),
         width_mult=float(get_nested(model_cfg, "model.encoder.width_mult", 1.0)),
         output_stride=int(get_nested(model_cfg, "model.encoder.output_stride", 16)),
         decoder_channels=int(get_nested(model_cfg, "model.decoder.channels", 128)),

@@ -122,7 +122,7 @@ def main() -> None:
     device = torch.device(requested_device)
 
     input_size = int(get_nested(model_cfg, "model.input_size", [320, 320])[0])
-    num_classes = int(get_nested(model_cfg, "model.num_classes", 19))
+    num_classes = int(get_nested(model_cfg, "model.num_classes", 20))
 
     train_dataset = CelebAMaskHQDataset.train(
         image_dir=get_nested(dataset_cfg, "dataset.image_dir"),

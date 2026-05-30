@@ -1,6 +1,6 @@
 dataset:
   name: celebamask_hq
-  num_classes: 19
+  num_classes: 20
   raw_root: data/raw/celebamask_hq
   processed_root: data/processed/celebamask_hq
   image_dir: data/processed/celebamask_hq/images
@@ -29,3 +29,4 @@ dataset:
     - cloth
     - hair
     - hat
+    - teeth

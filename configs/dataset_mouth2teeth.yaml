@@ -1,0 +1,32 @@
+dataset:
+  name: mouth2teeth
+  num_classes: 20
+  raw_root: data/raw/mouth2teeth
+  processed_root: data/processed/mouth2teeth
+  image_dir: data/processed/mouth2teeth/images
+  mask_dir: data/processed/mouth2teeth/masks
+  splits:
+    train: data/splits/mouth2teeth/train.txt
+    val: data/splits/mouth2teeth/val.txt
+    test: data/splits/mouth2teeth/test.txt
+  classes:
+    - background
+    - skin
+    - l_brow
+    - r_brow
+    - l_eye
+    - r_eye
+    - eye_g
+    - l_ear
+    - r_ear
+    - ear_r
+    - nose
+    - mouth
+    - u_lip
+    - l_lip
+    - neck
+    - neck_l
+    - cloth
+    - hair
+    - hat
+    - teeth

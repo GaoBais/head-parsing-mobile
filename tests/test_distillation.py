@@ -12,8 +12,8 @@ class DistillationTests(unittest.TestCase):
 
         from src.training.distillation import SoftTargetDistillationLoss
 
-        student = torch.randn(2, 19, 32, 32)
-        teacher = torch.randn(2, 19, 16, 16)
+        student = torch.randn(2, 20, 32, 32)
+        teacher = torch.randn(2, 20, 16, 16)
         loss = SoftTargetDistillationLoss(temperature=2.0)(student, teacher)
         self.assertTrue(torch.isfinite(loss))
 

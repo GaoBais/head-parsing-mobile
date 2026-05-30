@@ -5,16 +5,16 @@ export:
     onnx:
       enabled: true
       opset: 17
-      output: weights/head_parsing_mobile_320.onnx
+      output: weights/head_parsing_mobile_320_teeth.onnx
     tflite:
       enabled: true
       precision: fp16
-      output: weights/head_parsing_mobile_320_fp16.tflite
+      output: weights/head_parsing_mobile_320_teeth_fp16.tflite
     coreml:
       enabled: true
       precision: fp16
       minimum_deployment_target: ios15
-      output: weights/HeadParsingMobile320.mlpackage
+      output: weights/HeadParsingMobile320Teeth.mlpackage
   validation:
     compare_outputs: true
     max_abs_error: 0.02

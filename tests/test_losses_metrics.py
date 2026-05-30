@@ -12,14 +12,14 @@ class LossMetricTests(unittest.TestCase):
 
         from src.training import CombinedSegmentationLoss, SegmentationLossConfig, SegmentationMetrics
 
-        logits = torch.randn(2, 19, 32, 32)
-        target = torch.randint(0, 19, (2, 32, 32))
-        criterion = CombinedSegmentationLoss(SegmentationLossConfig(num_classes=19, min_kept=128))
+        logits = torch.randn(2, 20, 32, 32)
+        target = torch.randint(0, 20, (2, 32, 32))
+        criterion = CombinedSegmentationLoss(SegmentationLossConfig(num_classes=20, min_kept=128))
         losses = criterion(logits, target)
         self.assertIn("loss", losses)
         self.assertTrue(torch.isfinite(losses["loss"]))
 
-        metrics = SegmentationMetrics(num_classes=19)
+        metrics = SegmentationMetrics(num_classes=20)
         metrics.update(logits, target)
         result = metrics.compute()
         self.assertIn("mean_iou", result)

@@ -17,7 +17,7 @@ class OnnxExportConfig:
     checkpoint: Path
     output: Path
     input_size: tuple[int, int] = (320, 320)
-    num_classes: int = 19
+    num_classes: int = 20
     width_mult: float = 1.0
     output_stride: int = 16
     decoder_channels: int = 128

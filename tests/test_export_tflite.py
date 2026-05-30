@@ -14,6 +14,7 @@ class TFLiteExportTests(unittest.TestCase):
         config = TFLiteExportConfig(checkpoint=Path("x.pt"), output=Path("x.tflite"))
         self.assertEqual(config.precision, "fp16")
         self.assertEqual(config.input_size, (320, 320))
+        self.assertEqual(config.converter, "auto")
 
 
 if __name__ == "__main__":

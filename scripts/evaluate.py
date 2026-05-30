@@ -57,8 +57,13 @@ def strip_module_prefix(state_dict: dict[str, Any]) -> dict[str, Any]:
 def save_metrics(metrics: dict[str, Any], output_path: Path, class_names: list[str]) -> None:
     metrics = dict(metrics)
     if "per_class_iou" in metrics:
+        if len(class_names) < len(metrics["per_class_iou"]):
+            raise ValueError(
+                f"Expected at least {len(metrics['per_class_iou'])} class names, got {len(class_names)}."
+            )
         metrics["per_class"] = {
-            class_name: {"iou": metrics["per_class_iou"][index]} for index, class_name in enumerate(class_names)
+            class_name: {"iou": metrics["per_class_iou"][index]}
+            for index, class_name in enumerate(class_names[: len(metrics["per_class_iou"])])
         }
     output_path.parent.mkdir(parents=True, exist_ok=True)
     output_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
@@ -124,7 +129,7 @@ def main() -> None:
     device = torch.device(args.device)
 
     input_size = int(get_nested(model_cfg, "model.input_size", [320, 320])[0])
-    num_classes = int(get_nested(model_cfg, "model.num_classes", 19))
+    num_classes = int(get_nested(model_cfg, "model.num_classes", 20))
     batch_size = args.batch_size or int(get_nested(train_cfg, "train.batch_size", 64))
     num_workers = args.num_workers if args.num_workers is not None else int(get_nested(train_cfg, "train.num_workers", 8))
 

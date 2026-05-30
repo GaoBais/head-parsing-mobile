@@ -1,7 +1,7 @@
 model:
   name: HeadParsingMobile
   input_size: [320, 320]
-  num_classes: 19
+  num_classes: 20
   encoder:
     name: mobilenetv2
     width_mult: 1.0

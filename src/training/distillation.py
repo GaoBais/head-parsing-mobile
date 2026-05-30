@@ -132,7 +132,7 @@ def load_bisenet_teacher(
     repo_path: str | Path,
     checkpoint_path: str | Path,
     backbone: str = "resnet34",
-    num_classes: int = 19,
+    num_classes: int = 20,
     device: str | torch.device = "cpu",
 ) -> TeacherAdapter:
     """Load the current `../face-parsing` BiSeNet model as a teacher."""
