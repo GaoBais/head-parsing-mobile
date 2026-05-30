@@ -11,7 +11,7 @@ Status values:
 
 ## Task Summary
 
-Total tasks: 15
+Total tasks: 16
 
 | ID | Task | Status | Progress | Deliverable |
 | --- | --- | --- | --- | --- |
@@ -30,6 +30,7 @@ Total tasks: 15
 | T13 | Mouth2teeth class extension | done | 100% | 20-class configs and preprocessing support |
 | T14 | Mouth2teeth evaluation report | done | 100% | metrics summary and visual report |
 | T15 | TFLite smoke test and mobile integration guide | done | 100% | smoke-test tool, metadata, integration doc |
+| T16 | Android TFLite integration baseline | done | 100% | Android guide and Kotlin inference example |
 
 ## Current Notes
 
@@ -37,7 +38,7 @@ Total tasks: 15
 - `../face-parsing` remains useful as a teacher/baseline reference.
 - Local Windows is the development environment only. It has host Python 3.13.7 at `C:\Users\hengx\AppData\Local\Programs\Python\Python313\python.exe`, but no NVIDIA GPU is expected. Use host Python for local checks; run full CUDA training later on the Linux server.
 - Local PyTorch is not installed. Non-PyTorch tests run locally; PyTorch/ONNX-dependent model/loss/distillation/export tests are present but skipped until PyTorch is available on the server or local CPU environment.
-- TFLite smoke-test code and docs are locally verified, but this Windows environment does not have a TFLite/LiteRT Python runtime. Run the actual `.tflite` inference smoke test in the server export environment or on device.
+- The default host Python environment does not include TFLite/LiteRT, but `.venv-tflite` can run CPU TFLite smoke tests with TensorFlow's interpreter. GPU/device validation still belongs on Android/iOS hardware.
 
 ## Change Log
 
@@ -60,3 +61,4 @@ Total tasks: 15
 - 2026-05-30: Documented the server training command with `PYTHONUNBUFFERED=1`, `python -u`, and `tee outputs/<run_id>/train.log` so future runs preserve logs required for training-curve reports.
 - 2026-05-30: Added a mouth2teeth evaluation report with per-class IoU chart, focused mouth/teeth/lip chart, sample gallery, and artifact manifest.
 - 2026-05-30: Completed T15 code/documentation by adding TFLite smoke-test tooling, 20-class mobile metadata, README entry points, and Android/iOS integration guidance. Local `python -m unittest discover -s tests`, static compilation, CLI help, and metadata JSON checks passed; full `.tflite` inference requires a LiteRT/TFLite runtime on server or device.
+- 2026-05-30: Completed T16 by adding an Android TFLite integration baseline and Kotlin inference example that preserve RGB, NCHW input layout, ImageNet normalization, logits argmax, and `teeth` class ID 19. Local Python unit tests and `git diff --check` passed; Android/Kotlin compilation is pending an app project.

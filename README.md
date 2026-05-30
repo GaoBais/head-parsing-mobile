@@ -24,6 +24,7 @@
 - [实现进度记录](docs/progress.md)
 - [设备 benchmark 协议](docs/benchmark_protocol.md)
 - [移动端集成说明](docs/mobile_integration.md)
+- [Android TFLite 集成基线](docs/android_tflite_integration.md)
 
 ## 目录概览
 
@@ -36,6 +37,7 @@ head-parsing-mobile/
   src/           Python 包源码
   tests/         单元测试和 smoke test
   tools/         数据检查、benchmark 和转换辅助工具
+  examples/      移动端接入示例代码
   benchmarks/    设备 benchmark 模板与运行记录
   weights/       本地 checkpoint 和导出模型
   outputs/       训练日志、评估报告和可视化样例
@@ -181,6 +183,8 @@ python tools/tflite_smoke_test.py \
   --image data/processed/mouth2teeth/images/107.jpg \
   --output-dir outputs/tflite_smoke_mouth2teeth_v2
 ```
+
+Android 端集成基线见 `docs/android_tflite_integration.md` 和 `examples/android/HeadParsingTflite.kt`。
 
 ## 可视化工具
 
