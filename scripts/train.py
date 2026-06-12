@@ -88,6 +88,11 @@ def build_train_transform_kwargs(train_cfg: dict) -> dict:
     occlusion = get_nested(train_cfg, "train.augmentation.occlusion")
     if occlusion is not None:
         kwargs["occlusion_prob"] = 0.25 if bool(occlusion) else 0.0
+    label_swaps = get_nested(train_cfg, "train.augmentation.label_swaps")
+    if label_swaps is not None:
+        if not isinstance(label_swaps, dict):
+            raise ValueError("Expected train.augmentation.label_swaps to be a mapping.")
+        kwargs["label_swaps"] = {int(src): int(dst) for src, dst in label_swaps.items()}
     return kwargs
 
 

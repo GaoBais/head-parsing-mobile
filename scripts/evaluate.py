@@ -69,7 +69,18 @@ def save_metrics(metrics: dict[str, Any], output_path: Path, class_names: list[s
     output_path.write_text(json.dumps(metrics, indent=2), encoding="utf-8")
 
 
-def save_visual_samples(torch, model, data_loader, device, output_dir: Path, max_samples: int) -> None:
+def resolve_class_names(dataset_cfg: dict[str, Any], num_classes: int) -> list[str]:
+    from src.deploy.palette import CLASS_NAMES
+    from src.utils.config import get_nested
+
+    configured = get_nested(dataset_cfg, "dataset.classes")
+    class_names = list(configured) if configured is not None else list(CLASS_NAMES[:num_classes])
+    if len(class_names) != num_classes:
+        raise ValueError(f"Expected {num_classes} class names, got {len(class_names)}.")
+    return class_names
+
+
+def save_visual_samples(torch, model, data_loader, device, output_dir: Path, max_samples: int, palette) -> None:
     if max_samples <= 0:
         return
 
@@ -101,7 +112,7 @@ def save_visual_samples(torch, model, data_loader, device, output_dir: Path, max
                 else:
                     image = np.zeros((*preds[index].shape, 3), dtype=np.uint8)
 
-                grid = make_prediction_grid(image, preds[index], targets_np[index])
+                grid = make_prediction_grid(image, preds[index], targets_np[index], palette=palette)
                 grid.save(output_dir / f"{ids[index]}_grid.jpg", quality=95)
                 Image.fromarray(preds[index]).save(output_dir / f"{ids[index]}_pred.png")
                 saved += 1
@@ -114,7 +125,7 @@ def main() -> None:
     from torch.utils.data import DataLoader
 
     from src.datasets import CelebAMaskHQDataset
-    from src.deploy.palette import CLASS_NAMES
+    from src.deploy.palette import palette_for_class_names
     from src.models import HeadParsingMobile
     from src.training import CombinedSegmentationLoss, SegmentationLossConfig
     from src.training.trainer import evaluate
@@ -130,6 +141,8 @@ def main() -> None:
 
     input_size = int(get_nested(model_cfg, "model.input_size", [320, 320])[0])
     num_classes = int(get_nested(model_cfg, "model.num_classes", 20))
+    class_names = resolve_class_names(dataset_cfg, num_classes)
+    palette = palette_for_class_names(class_names)
     batch_size = args.batch_size or int(get_nested(train_cfg, "train.batch_size", 64))
     num_workers = args.num_workers if args.num_workers is not None else int(get_nested(train_cfg, "train.num_workers", 8))
 
@@ -184,8 +197,8 @@ def main() -> None:
     metrics["checkpoint"] = str(args.checkpoint)
     metrics["split"] = args.split
     metrics["num_samples"] = len(dataset)
-    save_metrics(metrics, args.output_dir / f"metrics_{args.split}.json", CLASS_NAMES)
-    save_visual_samples(torch, model, data_loader, device, args.output_dir / "samples", args.save_samples)
+    save_metrics(metrics, args.output_dir / f"metrics_{args.split}.json", class_names)
+    save_visual_samples(torch, model, data_loader, device, args.output_dir / "samples", args.save_samples, palette)
     print(json.dumps({key: metrics[key] for key in ("mean_iou", "pixel_acc", "mean_acc")}, indent=2))
 
 

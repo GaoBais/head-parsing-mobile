@@ -16,7 +16,7 @@ if str(PROJECT_ROOT) not in sys.path:
     sys.path.insert(0, str(PROJECT_ROOT))
 
 from src.datasets.transforms import IMAGENET_MEAN, IMAGENET_STD
-from src.deploy.palette import CLASS_NAMES
+from src.deploy.palette import CLASS_NAMES, PALETTE
 from src.utils.visualization import blend_image_mask, colorize_mask
 
 
@@ -112,6 +112,27 @@ def preprocess_image(image_path: Path, input_detail: dict[str, Any]) -> tuple[np
     return arr, image, layout
 
 
+def load_mobile_metadata(metadata_path: Path) -> tuple[list[str], list[list[int]], dict[str, Any] | None]:
+    if not metadata_path.exists():
+        return list(CLASS_NAMES), [list(color) for color in PALETTE], None
+
+    metadata = json.loads(metadata_path.read_text(encoding="utf-8"))
+    classes = metadata.get("classes", [])
+    if not classes:
+        return list(CLASS_NAMES), [list(color) for color in PALETTE], metadata
+
+    max_id = max(int(item["id"]) for item in classes)
+    class_names = [""] * (max_id + 1)
+    palette = [[128, 128, 128] for _ in range(max_id + 1)]
+    for item in classes:
+        index = int(item["id"])
+        class_names[index] = str(item["name"])
+        palette[index] = [int(value) for value in item.get("color", [128, 128, 128])]
+    if any(not name for name in class_names):
+        raise ValueError(f"Metadata class ids must be contiguous from 0 to {max_id}: {metadata_path}")
+    return class_names, palette, metadata
+
+
 def decode_prediction(output: np.ndarray, num_classes: int = len(CLASS_NAMES)) -> tuple[np.ndarray, str]:
     if output.ndim == 4:
         if output.shape[1] == num_classes:
@@ -128,9 +149,9 @@ def decode_prediction(output: np.ndarray, num_classes: int = len(CLASS_NAMES)) -
     raise ValueError(f"Could not decode segmentation output with shape={list(output.shape)}")
 
 
-def class_histogram(mask: np.ndarray) -> dict[str, int]:
-    counts = np.bincount(mask.reshape(-1), minlength=len(CLASS_NAMES))
-    return {name: int(counts[index]) for index, name in enumerate(CLASS_NAMES)}
+def class_histogram(mask: np.ndarray, class_names: list[str]) -> dict[str, int]:
+    counts = np.bincount(mask.reshape(-1), minlength=len(class_names))
+    return {name: int(counts[index]) for index, name in enumerate(class_names)}
 
 
 def json_safe(value: Any) -> Any:
@@ -149,6 +170,7 @@ def json_safe(value: Any) -> Any:
 
 def main() -> None:
     args = parse_args()
+    class_names, palette, metadata = load_mobile_metadata(args.metadata)
     interpreter_cls, runtime_name = import_tflite_interpreter()
     interpreter = create_interpreter(interpreter_cls, args.model, args.num_threads)
     interpreter.allocate_tensors()
@@ -161,7 +183,11 @@ def main() -> None:
         "input_details": json_safe(input_details),
         "output_details": json_safe(output_details),
         "metadata": str(args.metadata) if args.metadata.exists() else None,
+        "num_classes": len(class_names),
+        "class_names": class_names,
     }
+    if metadata is not None:
+        report["metadata_name"] = metadata.get("model_name")
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     if args.image is not None:
@@ -174,14 +200,14 @@ def main() -> None:
         interpreter.set_tensor(input_details[0]["index"], input_tensor)
         interpreter.invoke()
         output = interpreter.get_tensor(output_details[0]["index"])
-        pred_mask, output_layout = decode_prediction(output)
+        pred_mask, output_layout = decode_prediction(output, num_classes=len(class_names))
 
         pred_path = args.output_dir / f"{args.image.stem}_pred.png"
         color_path = args.output_dir / f"{args.image.stem}_color.png"
         overlay_path = args.output_dir / f"{args.image.stem}_overlay.jpg"
         Image.fromarray(pred_mask).save(pred_path)
-        colorize_mask(pred_mask).save(color_path)
-        blend_image_mask(image, pred_mask).save(overlay_path, quality=95)
+        colorize_mask(pred_mask, palette=palette).save(color_path)
+        blend_image_mask(image, pred_mask, palette=palette).save(overlay_path, quality=95)
 
         report.update(
             {
@@ -193,7 +219,7 @@ def main() -> None:
                 "prediction_mask": str(pred_path),
                 "color_mask": str(color_path),
                 "overlay": str(overlay_path),
-                "predicted_classes": class_histogram(pred_mask),
+                "predicted_classes": class_histogram(pred_mask, class_names),
             }
         )
 

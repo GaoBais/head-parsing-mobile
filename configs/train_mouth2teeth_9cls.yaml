@@ -1,0 +1,39 @@
+train:
+  seed: 42
+  epochs: 80
+  batch_size: 32
+  num_workers: 8
+  precision: amp
+  optimizer:
+    name: sgd
+    lr: 0.01
+    momentum: 0.9
+    weight_decay: 0.00004
+  scheduler:
+    name: poly
+    power: 0.9
+    warmup_epochs: 3
+  losses:
+    ce_weight: 1.0
+    dice_weight: 0.5
+    boundary_weight: 0.2
+    distill_weight: 0.0
+    ohem: true
+  augmentation:
+    random_scale: [0.65, 1.6]
+    random_rotate_deg: 20
+    random_translate_ratio: 0.2
+    random_letterbox: true
+    color_jitter: true
+    blur: true
+    jpeg: true
+    occlusion: true
+    label_swaps:
+      2: 3
+      3: 2
+  teacher:
+    enabled: false
+    model: bisenet_resnet34
+    repo_path: ../face-parsing
+    checkpoint: weights/teacher_resnet34.pt
+    temperature: 2.0

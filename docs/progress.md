@@ -11,7 +11,7 @@ Status values:
 
 ## Task Summary
 
-Total tasks: 17
+Total tasks: 18
 
 | ID | Task | Status | Progress | Deliverable |
 | --- | --- | --- | --- | --- |
@@ -32,6 +32,7 @@ Total tasks: 17
 | T15 | TFLite smoke test and mobile integration guide | done | 100% | smoke-test tool, metadata, integration doc |
 | T16 | Android TFLite integration baseline | done | 100% | Android guide and Kotlin inference example |
 | T17 | Android minimal demo project | done | 100% | Gradle Android app for single-image TFLite smoke test |
+| T18 | Mouth2Teeth 9-class path | done | 100% | 9-class configs, remap tool, metadata-aware evaluation, regression tests |
 
 ## Current Notes
 
@@ -65,3 +66,4 @@ Total tasks: 17
 - 2026-05-30: Completed T15 code/documentation by adding TFLite smoke-test tooling, 20-class mobile metadata, README entry points, and Android/iOS integration guidance. Local `python -m unittest discover -s tests`, static compilation, CLI help, and metadata JSON checks passed; full `.tflite` inference requires a LiteRT/TFLite runtime on server or device.
 - 2026-05-30: Completed T16 by adding an Android TFLite integration baseline and Kotlin inference example that preserve RGB, NCHW input layout, ImageNet normalization, logits argmax, and `teeth` class ID 19. Local Python unit tests and `git diff --check` passed; Android/Kotlin compilation is pending an app project.
 - 2026-05-30: Completed T17 by adding a minimal Android demo project that loads the exported TFLite model and a sample image from assets, runs CPU inference, displays a color mask, and reports input/output shapes, latency, top classes, and `teeth` pixels. Local Python tests, whitespace checks, Android manifest XML parsing, and Maven artifact URL checks passed; Android Studio/SDK is installed, while full Android build/run is pending successful Gradle Sync and an emulator or device.
+- 2026-06-12: Completed the Mouth2Teeth 9-class implementation path on `feature/mouth2teeth-9class`: added 9-class configs and mobile metadata, a 20-class to 9-class remap tool, configurable label swaps, dataset-config-aware evaluation labels, metadata-aware TFLite smoke testing, and regression tests. Local unit tests, static compilation, config/metadata checks, and CLI help checks passed; full data remap/training remains server-side work.

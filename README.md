@@ -26,6 +26,8 @@
 - [移动端集成说明](docs/mobile_integration.md)
 - [Android TFLite 集成基线](docs/android_tflite_integration.md)
 - [Android 最小 Demo](android-demo/README.md)
+- [Mouth2Teeth 9 类模型改造方案](docs/mouth2teeth_9class_plan.md)
+- [Mouth2Teeth 9 类回归测试结果](docs/mouth2teeth_9class_test_results.md)
 
 ## 目录概览
 

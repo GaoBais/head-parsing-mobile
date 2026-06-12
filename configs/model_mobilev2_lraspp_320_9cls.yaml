@@ -1,0 +1,17 @@
+model:
+  name: HeadParsingMobile
+  input_size: [320, 320]
+  num_classes: 9
+  encoder:
+    name: mobilenetv2
+    width_mult: 1.0
+    output_stride: 16
+    pretrained: false
+  decoder:
+    name: lraspp_lite
+    low_level_stride: 4
+    channels: 128
+    dropout: 0.0
+  export:
+    include_softmax: false
+    include_argmax: false

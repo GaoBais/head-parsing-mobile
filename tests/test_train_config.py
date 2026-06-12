@@ -16,6 +16,7 @@ class TrainConfigTests(unittest.TestCase):
                     "blur": True,
                     "jpeg": False,
                     "occlusion": True,
+                    "label_swaps": {2: 3, 3: 2},
                 }
             }
         }
@@ -30,6 +31,7 @@ class TrainConfigTests(unittest.TestCase):
         self.assertEqual(kwargs["blur_prob"], 0.2)
         self.assertEqual(kwargs["jpeg_prob"], 0.0)
         self.assertEqual(kwargs["occlusion_prob"], 0.25)
+        self.assertEqual(kwargs["label_swaps"], {2: 3, 3: 2})
 
 
 if __name__ == "__main__":

@@ -24,7 +24,7 @@ except ImportError:
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.225)
 
-LABEL_SWAPS = {
+DEFAULT_LABEL_SWAPS = {
     2: 3,
     3: 2,
     4: 5,
@@ -108,11 +108,14 @@ def _translated_offset(max_offset: int, translate_ratio: float, randomize: bool 
     return int(round(max(0.0, min(float(max_offset), random.uniform(center - radius, center + radius)))))
 
 
-def _swap_left_right_labels(mask: Image.Image) -> Image.Image:
+def _swap_left_right_labels(mask: Image.Image, label_swaps: dict[int, int] | None = None) -> Image.Image:
+    label_swaps = DEFAULT_LABEL_SWAPS if label_swaps is None else label_swaps
+    if not label_swaps:
+        return mask
     arr = np.asarray(mask, dtype=np.uint8)
     swapped = arr.copy()
-    for src, dst in LABEL_SWAPS.items():
-        swapped[arr == src] = dst
+    for src, dst in label_swaps.items():
+        swapped[arr == int(src)] = int(dst)
     return Image.fromarray(swapped)
 
 
@@ -159,6 +162,7 @@ class MobileTrainTransform:
     blur_prob: float = 0.2
     jpeg_prob: float = 0.2
     occlusion_prob: float = 0.25
+    label_swaps: dict[int, int] | None = None
     mean: Sequence[float] = IMAGENET_MEAN
     std: Sequence[float] = IMAGENET_STD
 
@@ -170,7 +174,7 @@ class MobileTrainTransform:
 
         if self.horizontal_flip_prob > 0 and random.random() < self.horizontal_flip_prob:
             image = image.transpose(Image.Transpose.FLIP_LEFT_RIGHT)
-            mask = _swap_left_right_labels(mask).transpose(Image.Transpose.FLIP_LEFT_RIGHT)
+            mask = _swap_left_right_labels(mask, self.label_swaps).transpose(Image.Transpose.FLIP_LEFT_RIGHT)
 
         if self.rotate_degrees > 0:
             angle = random.uniform(-self.rotate_degrees, self.rotate_degrees)

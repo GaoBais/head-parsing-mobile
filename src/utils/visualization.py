@@ -31,6 +31,7 @@ def blend_image_mask(
     image: str | Path | Image.Image | np.ndarray,
     mask: str | Path | Image.Image | np.ndarray,
     alpha: float = 0.45,
+    palette: Sequence[Sequence[int]] = PALETTE,
 ) -> Image.Image:
     if isinstance(image, np.ndarray):
         image_pil = Image.fromarray(image.astype(np.uint8, copy=False)).convert("RGB")
@@ -39,7 +40,7 @@ def blend_image_mask(
     else:
         image_pil = Image.open(image).convert("RGB")
 
-    color_mask = colorize_mask(mask).resize(image_pil.size, Image.Resampling.NEAREST)
+    color_mask = colorize_mask(mask, palette=palette).resize(image_pil.size, Image.Resampling.NEAREST)
     return Image.blend(image_pil, color_mask, alpha=alpha)
 
 
@@ -48,6 +49,7 @@ def make_prediction_grid(
     pred_mask: str | Path | Image.Image | np.ndarray,
     target_mask: str | Path | Image.Image | np.ndarray | None = None,
     alpha: float = 0.45,
+    palette: Sequence[Sequence[int]] = PALETTE,
 ) -> Image.Image:
     if isinstance(image, np.ndarray):
         image_pil = Image.fromarray(image.astype(np.uint8, copy=False)).convert("RGB")
@@ -56,13 +58,13 @@ def make_prediction_grid(
     else:
         image_pil = Image.open(image).convert("RGB")
 
-    pred_overlay = blend_image_mask(image_pil, pred_mask, alpha=alpha)
-    panels = [image_pil, colorize_mask(pred_mask).resize(image_pil.size, Image.Resampling.NEAREST), pred_overlay]
+    pred_overlay = blend_image_mask(image_pil, pred_mask, alpha=alpha, palette=palette)
+    panels = [image_pil, colorize_mask(pred_mask, palette=palette).resize(image_pil.size, Image.Resampling.NEAREST), pred_overlay]
     labels = ["image", "prediction", "overlay"]
 
     if target_mask is not None:
-        target_color = colorize_mask(target_mask).resize(image_pil.size, Image.Resampling.NEAREST)
-        target_overlay = blend_image_mask(image_pil, target_mask, alpha=alpha)
+        target_color = colorize_mask(target_mask, palette=palette).resize(image_pil.size, Image.Resampling.NEAREST)
+        target_overlay = blend_image_mask(image_pil, target_mask, alpha=alpha, palette=palette)
         panels.extend([target_color, target_overlay])
         labels.extend(["target", "target overlay"])
 
@@ -79,7 +81,11 @@ def make_prediction_grid(
     return canvas
 
 
-def mask_class_histogram(mask: str | Path | Image.Image | np.ndarray, num_classes: int = len(CLASS_NAMES)) -> dict[str, int]:
+def mask_class_histogram(
+    mask: str | Path | Image.Image | np.ndarray,
+    num_classes: int = len(CLASS_NAMES),
+    class_names: Sequence[str] = CLASS_NAMES,
+) -> dict[str, int]:
     mask_arr = load_mask(mask)
     counts = np.bincount(mask_arr.reshape(-1), minlength=num_classes)
-    return {CLASS_NAMES[index]: int(counts[index]) for index in range(num_classes)}
+    return {class_names[index]: int(counts[index]) for index in range(num_classes)}

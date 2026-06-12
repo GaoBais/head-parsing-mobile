@@ -39,6 +39,19 @@ class VisualizationTests(unittest.TestCase):
             self.assertEqual(grid.size[0], 48)
             self.assertEqual(histogram["teeth"], 8 * 8)
 
+    def test_9class_palette_and_histogram(self):
+        mask = np.zeros((8, 8), dtype=np.uint8)
+        mask[:4, :4] = 7
+        palette = [[0, 0, 0] for _ in range(9)]
+        palette[7] = [0, 255, 255]
+        class_names = ["background", "skin", "l_brow", "r_brow", "mouth", "u_lip", "l_lip", "teeth", "hair"]
+
+        color = colorize_mask(mask, palette=palette)
+        histogram = mask_class_histogram(mask, num_classes=9, class_names=class_names)
+
+        self.assertEqual(color.getpixel((0, 0)), (0, 255, 255))
+        self.assertEqual(histogram["teeth"], 16)
+
 
 if __name__ == "__main__":
     unittest.main()
