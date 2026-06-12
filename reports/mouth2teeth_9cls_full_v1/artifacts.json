@@ -1,0 +1,44 @@
+[
+  {
+    "name": "metrics_val",
+    "path": "outputs/eval_mouth2teeth_9cls_full_v1_val/metrics_val.json",
+    "size_bytes": 2170,
+    "size_mb": 0.0,
+    "sha256": "5cfe3fd236ab9ab11520863342025bc6aadfdefc615bdb04b7a16a51f2344c3d"
+  },
+  {
+    "name": "metrics_test",
+    "path": "outputs/eval_mouth2teeth_9cls_full_v1_test/metrics_test.json",
+    "size_bytes": 2165,
+    "size_mb": 0.0,
+    "sha256": "4dcd5ead7f89af8350b4a61d72a7590f8118148ea22a356c46cf7390a30e6de1"
+  },
+  {
+    "name": "train_log",
+    "path": "outputs/train_mouth2teeth_9cls_full_v1_train.log",
+    "size_bytes": 175795,
+    "size_mb": 0.17,
+    "sha256": "0cedc910e8bd85c17017cb1dcfc8e643d4f774070470c2916945d5dfa5e3c97e"
+  },
+  {
+    "name": "tflite_export_report",
+    "path": "outputs/tflite_export_mouth2teeth_9cls_report.json",
+    "size_bytes": 337,
+    "size_mb": 0.0,
+    "sha256": "e8c0e61befba4660f0279f64bf1d26fe778a2df3c14d1d0f175a600814fe2064"
+  },
+  {
+    "name": "tflite_smoke_report",
+    "path": "outputs/tflite_smoke_mouth2teeth_9cls/tflite_smoke_report.json",
+    "size_bytes": 2091,
+    "size_mb": 0.0,
+    "sha256": "a96c96ebd9f6dcc8014a730fc8a7bd9376e9184356cf17b90fad6af5df34d9cb"
+  },
+  {
+    "name": "tflite_model",
+    "path": "weights/head_parsing_mobile_320_mouth2teeth_9cls_fp16.tflite",
+    "size_bytes": 10423204,
+    "size_mb": 9.94,
+    "sha256": "51042a4b97aaf48ee7a4b702ca58b0f83db53f1addb90058af795a918a87dca7"
+  }
+]
