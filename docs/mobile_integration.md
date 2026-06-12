@@ -1,5 +1,7 @@
 # 移动端集成说明
 
+> 本文档适用于旧版 20 类 `HeadParsingMobile320Teeth` 模型。若集成当前 9 类 `HeadParsingMobile320Mouth2Teeth9Cls` 模型，请使用 [Mouth2Teeth 9 类模型说明与第三方 App 集成指南](mouth2teeth_9cls_model_integration.md)，不要复用本文档中的 20 类 class id、metadata 或模型文件路径。
+
 本文档描述 `HeadParsingMobile320Teeth` 的 Android/iOS 集成约定。当前已验证的移动端优先产物是：
 
 ```text

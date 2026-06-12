@@ -28,6 +28,7 @@
 - [Android 最小 Demo](android-demo/README.md)
 - [Mouth2Teeth 9 类模型改造方案](docs/mouth2teeth_9class_plan.md)
 - [Mouth2Teeth 9 类回归测试结果](docs/mouth2teeth_9class_test_results.md)
+- [Mouth2Teeth 9 类模型说明与第三方 App 集成指南](docs/mouth2teeth_9cls_model_integration.md)
 
 ## 目录概览
 
