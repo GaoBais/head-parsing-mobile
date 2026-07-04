@@ -1,5 +1,7 @@
 import importlib.util
+import sys
 import tempfile
+import types
 import unittest
 from pathlib import Path
 
@@ -129,6 +131,73 @@ class TFLiteV3ExportTests(unittest.TestCase):
 
         with self.assertRaises(RuntimeError):
             export_tflite_v3(self._config("label_map", "x.tflite"), converter_module=LegacyConverter())
+
+    def test_patches_litert_uint8_dtype_mapping(self):
+        import torch
+
+        from src.export.tflite import _patch_litert_uint8_dtype_support
+
+        module_names = [
+            "litert_converter",
+            "litert_converter.mlir",
+            "litert_converter.mlir.ir",
+            "litert_torch",
+            "litert_torch.backend",
+            "litert_torch.backend.lowerings",
+            "litert_torch.backend.lowerings.utils",
+            "litert_torch.backend.export_utils",
+        ]
+        original_modules = {name: sys.modules.get(name) for name in module_names}
+
+        try:
+            litert_converter = types.ModuleType("litert_converter")
+            mlir = types.ModuleType("litert_converter.mlir")
+            ir = types.ModuleType("litert_converter.mlir.ir")
+
+            class IntegerType:
+                @staticmethod
+                def get_unsigned(bits):
+                    return ("unsigned", bits)
+
+            ir.IntegerType = IntegerType
+            mlir.ir = ir
+
+            litert_torch = types.ModuleType("litert_torch")
+            backend = types.ModuleType("litert_torch.backend")
+            lowerings = types.ModuleType("litert_torch.backend.lowerings")
+            utils = types.ModuleType("litert_torch.backend.lowerings.utils")
+            export_utils = types.ModuleType("litert_torch.backend.export_utils")
+
+            def missing_uint8(dtype):
+                raise KeyError(dtype)
+
+            utils.torch_dtype_to_ir_element_type = missing_uint8
+            export_utils.torch_dtype_to_ir_element_type = missing_uint8
+
+            sys.modules.update(
+                {
+                    "litert_converter": litert_converter,
+                    "litert_converter.mlir": mlir,
+                    "litert_converter.mlir.ir": ir,
+                    "litert_torch": litert_torch,
+                    "litert_torch.backend": backend,
+                    "litert_torch.backend.lowerings": lowerings,
+                    "litert_torch.backend.lowerings.utils": utils,
+                    "litert_torch.backend.export_utils": export_utils,
+                }
+            )
+
+            converter = types.SimpleNamespace(__name__="litert_torch")
+            _patch_litert_uint8_dtype_support(converter)
+
+            self.assertEqual(utils.torch_dtype_to_ir_element_type(torch.uint8), ("unsigned", 8))
+            self.assertEqual(export_utils.torch_dtype_to_ir_element_type(torch.uint8), ("unsigned", 8))
+        finally:
+            for name, module in original_modules.items():
+                if module is None:
+                    sys.modules.pop(name, None)
+                else:
+                    sys.modules[name] = module
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ import importlib
 from dataclasses import dataclass
 from pathlib import Path
 from types import ModuleType
+from typing import Any
 
 import torch
 
@@ -90,6 +91,49 @@ def import_litert_torch_converter(preferred: str = "auto") -> ModuleType:
     ) from (errors[-1][1] if errors else None)
 
 
+def _patch_litert_uint8_dtype_support(converter: Any) -> None:
+    """Patch LiteRT Torch 0.9.x dtype metadata mapping for uint8 inputs.
+
+    The converter can lower uint8 tensors through StableHLO, but 0.9.1 omits
+    ``torch.uint8`` from the PyTorch-dtype-to-MLIR-type helper used while building
+    flat input metadata. Keep the workaround local to the export process instead
+    of asking users to edit site-packages on the server.
+    """
+
+    module_name = getattr(converter, "__name__", "") or converter.__class__.__module__
+    root = module_name.split(".", 1)[0]
+    if root not in {"litert_torch", "ai_edge_torch"}:
+        return
+
+    try:
+        from litert_converter.mlir import ir
+    except Exception:
+        return
+
+    module_names = [
+        f"{root}.backend.lowerings.utils",
+        f"{root}.backend.export_utils",
+    ]
+    patched = None
+    for name in module_names:
+        try:
+            module = importlib.import_module(name)
+        except Exception:
+            continue
+
+        original = getattr(module, "torch_dtype_to_ir_element_type", None)
+        if original is None:
+            continue
+        if patched is None:
+
+            def patched(dtype, _original=original):
+                if dtype is torch.uint8:
+                    return ir.IntegerType.get_unsigned(8)
+                return _original(dtype)
+
+        module.torch_dtype_to_ir_element_type = patched
+
+
 def export_tflite(config: TFLiteExportConfig, converter_module: ModuleType | None = None) -> Path:
     converter = converter_module or import_litert_torch_converter(config.converter)
     device = torch.device(config.device)
@@ -128,6 +172,7 @@ def export_tflite_v3(config: TFLiteV3ExportConfig, converter_module: ModuleType 
             "The TFLite converter does not expose to_channel_last_io(); "
             "upgrade litert_torch/ai_edge_torch for v3 NHWC export."
         )
+    _patch_litert_uint8_dtype_support(converter)
 
     from src.export.mobile_io import build_tflite_v3_module
 
