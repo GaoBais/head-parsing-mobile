@@ -11,7 +11,7 @@ Status values:
 
 ## Task Summary
 
-Total tasks: 18
+Total tasks: 19
 
 | ID | Task | Status | Progress | Deliverable |
 | --- | --- | --- | --- | --- |
@@ -33,6 +33,7 @@ Total tasks: 18
 | T16 | Android TFLite integration baseline | done | 100% | Android guide and Kotlin inference example |
 | T17 | Android minimal demo project | done | 100% | Gradle Android app for single-image TFLite smoke test |
 | T18 | Mouth2Teeth 9-class path | done | 100% | 9-class configs, remap tool, metadata-aware evaluation, regression tests |
+| T19 | Mobile v3 I/O export (uint8 NHWC input, in-graph norm/argmax, 256) | in_progress | 80% | v3 export pipeline, 4-artifact config, metadata, agreement gate; server export + 256 eval pending |
 
 ## Current Notes
 
@@ -67,3 +68,4 @@ Total tasks: 18
 - 2026-05-30: Completed T16 by adding an Android TFLite integration baseline and Kotlin inference example that preserve RGB, NCHW input layout, ImageNet normalization, logits argmax, and `teeth` class ID 19. Local Python unit tests and `git diff --check` passed; Android/Kotlin compilation is pending an app project.
 - 2026-05-30: Completed T17 by adding a minimal Android demo project that loads the exported TFLite model and a sample image from assets, runs CPU inference, displays a color mask, and reports input/output shapes, latency, top classes, and `teeth` pixels. Local Python tests, whitespace checks, Android manifest XML parsing, and Maven artifact URL checks passed; Android Studio/SDK is installed, while full Android build/run is pending successful Gradle Sync and an emulator or device.
 - 2026-06-12: Completed the Mouth2Teeth 9-class implementation path on `feature/mouth2teeth-9class`: added 9-class configs and mobile metadata, a 20-class to 9-class remap tool, configurable label swaps, dataset-config-aware evaluation labels, metadata-aware TFLite smoke testing, and regression tests. Local unit tests, static compilation, config/metadata checks, and CLI help checks passed; full data remap/training remains server-side work.
+- 2026-07-04: Implemented the mobile v3 I/O export path (T19) on `feature/export-v3-io`: `src/export/mobile_io.py` (ImageNet std folded into the stem conv — exact algebra, uint8 `x/255 - mean` input adapter, in-graph argmax head), TFLite v3 export with `to_channel_last_io` (uint8 NHWC input; label_map uint8 `[1,H,W]` primary + channel-last logits comparison variant), CoreML v3 export with `ct.ImageType(scale=1/255, bias=-mean)` image input (label_map int32 via native reduce_argmax + logits variant), v3 metadata generation (flat `input_size`/`input_layout`/`input_dtype`/`output_kind` keys for SDK-driven pre/post-processing), `scripts/export_mobile_v3.py` orchestrator (4 artifacts + per-artifact metadata + report), `tools/compare_v3_artifacts.py` >=99% label-map agreement gate, and `configs/model_mobilev2_lraspp_256_9cls.yaml` for the 256 accuracy gate via `scripts/evaluate.py`. Local macOS `.venv` (Python 3.13, torch 2.12 CPU): 72 tests passed (39 new, numerics verified end to end), CLI help checks passed. Actual conversion (litert_torch/ai_edge_torch, coremltools) and 256 val evaluation remain server/macOS export-environment work.

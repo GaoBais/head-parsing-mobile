@@ -33,6 +33,30 @@ class TFLiteExportConfig:
     converter: str = "auto"
 
 
+@dataclass
+class TFLiteV3ExportConfig:
+    """v3 I/O contract: uint8 NHWC input, in-graph normalization, optional in-graph argmax.
+
+    ``output_kind``:
+    - ``label_map``: in-graph argmax, uint8 label map ``[1, H, W]`` (primary artifact).
+    - ``logits``: raw fp32 logits in channel-last ``[1, H, W, C]`` (Android A/B
+      fallback; contiguous per-pixel classes make the on-device argmax sequential).
+    """
+
+    checkpoint: Path
+    output: Path
+    input_size: tuple[int, int] = (256, 256)
+    num_classes: int = 9
+    width_mult: float = 1.0
+    output_stride: int = 16
+    decoder_channels: int = 128
+    dropout: float = 0.0
+    device: str = "cpu"
+    precision: str = "fp16"
+    converter: str = "auto"
+    output_kind: str = "label_map"
+
+
 def import_litert_torch_converter(preferred: str = "auto") -> ModuleType:
     """Import the PyTorch to LiteRT converter package."""
 
@@ -88,7 +112,55 @@ def export_tflite(config: TFLiteExportConfig, converter_module: ModuleType | Non
     return config.output
 
 
-def _to_onnx_like_config(config: TFLiteExportConfig):
+def export_tflite_v3(config: TFLiteV3ExportConfig, converter_module: ModuleType | None = None) -> Path:
+    """Export the v3 uint8/NHWC artifact (see TFLiteV3ExportConfig for the contract).
+
+    Like the v2 path, the traced PyTorch graph stays FP32; fp16 weights come from
+    LiteRT lowering / follow-up quantization outside this function.
+    """
+
+    if config.output_kind not in {"label_map", "logits"}:
+        raise ValueError(f"Unsupported v3 output_kind: {config.output_kind}")
+
+    converter = converter_module or import_litert_torch_converter(config.converter)
+    if not hasattr(converter, "to_channel_last_io"):
+        raise RuntimeError(
+            "The TFLite converter does not expose to_channel_last_io(); "
+            "upgrade litert_torch/ai_edge_torch for v3 NHWC export."
+        )
+
+    from src.export.mobile_io import build_tflite_v3_module
+
+    device = torch.device(config.device)
+    model = build_model_from_export_config(_to_onnx_like_config(config)).to(device)
+    include_argmax = config.output_kind == "label_map"
+    export_model = build_tflite_v3_module(model, include_argmax=include_argmax).to(device)
+    export_model.eval()
+
+    # The label map [1, H, W] has no channel axis, so only the input is converted;
+    # the logits variant also converts the [1, C, H, W] output to channel-last.
+    if include_argmax:
+        channel_last_model = converter.to_channel_last_io(export_model, args=[0])
+    else:
+        channel_last_model = converter.to_channel_last_io(export_model, args=[0], outputs=[0])
+
+    sample_inputs = (
+        torch.randint(
+            0,
+            256,
+            (1, config.input_size[0], config.input_size[1], 3),
+            dtype=torch.uint8,
+            device=device,
+        ),
+    )
+    edge_model = converter.convert(channel_last_model, sample_inputs)
+
+    config.output.parent.mkdir(parents=True, exist_ok=True)
+    edge_model.export(str(config.output))
+    return config.output
+
+
+def _to_onnx_like_config(config: TFLiteExportConfig | TFLiteV3ExportConfig):
     from src.export.onnx import OnnxExportConfig
 
     return OnnxExportConfig(
@@ -101,5 +173,5 @@ def _to_onnx_like_config(config: TFLiteExportConfig):
         decoder_channels=config.decoder_channels,
         dropout=config.dropout,
         device=config.device,
-        include_softmax=config.include_softmax,
+        include_softmax=getattr(config, "include_softmax", False),
     )

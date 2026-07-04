@@ -25,6 +25,31 @@ class CoreMLExportConfig:
     include_softmax: bool = False
 
 
+@dataclass
+class CoreMLV3ExportConfig:
+    """v3 I/O contract: CVPixelBuffer image input (scale/bias in-framework via
+    ``ct.ImageType``, std folded into the stem conv), optional in-graph argmax.
+
+    ``output_kind``: ``label_map`` (int32 ``[1, H, W]``, native reduce_argmax) or
+    ``logits`` (fp logits ``[1, C, H, W]`` comparison variant).
+    ``color_layout``: channel order the host feeds (``RGB`` or ``BGR``); the
+    normalization bias follows this order.
+    """
+
+    checkpoint: Path
+    output: Path
+    input_size: tuple[int, int] = (256, 256)
+    num_classes: int = 9
+    width_mult: float = 1.0
+    output_stride: int = 16
+    decoder_channels: int = 128
+    dropout: float = 0.0
+    precision: str = "fp16"
+    minimum_deployment_target: str = "ios15"
+    output_kind: str = "label_map"
+    color_layout: str = "RGB"
+
+
 def import_coremltools():
     try:
         import coremltools as ct
@@ -82,7 +107,59 @@ def export_coreml(config: CoreMLExportConfig) -> Path:
     return config.output
 
 
-def _to_onnx_like_config(config: CoreMLExportConfig):
+def export_coreml_v3(config: CoreMLV3ExportConfig, ct=None) -> Path:
+    """Export the v3 image-input artifact (see CoreMLV3ExportConfig for the contract)."""
+
+    if config.output_kind not in {"label_map", "logits"}:
+        raise ValueError(f"Unsupported v3 output_kind: {config.output_kind}")
+    if config.color_layout not in {"RGB", "BGR"}:
+        raise ValueError(f"Unsupported v3 color_layout: {config.color_layout}")
+
+    import numpy as np
+
+    from src.datasets.transforms import IMAGENET_MEAN
+    from src.export.mobile_io import build_coreml_v3_module
+
+    ct = ct or import_coremltools()
+    model = build_model_from_export_config(_to_onnx_like_config(config))
+    include_argmax = config.output_kind == "label_map"
+    export_model = build_coreml_v3_module(model, include_argmax=include_argmax)
+    export_model.eval()
+
+    dummy_input = torch.rand(1, 3, config.input_size[0], config.input_size[1])
+    with torch.no_grad():
+        traced = torch.jit.trace(export_model, dummy_input)
+
+    # ImageType applies `pixel * scale + bias` per channel before the graph, i.e.
+    # `rgb/255 - mean`; the std division lives in the folded stem conv weights.
+    ordered_mean = IMAGENET_MEAN if config.color_layout == "RGB" else tuple(reversed(IMAGENET_MEAN))
+    image_input = ct.ImageType(
+        name="image",
+        shape=tuple(dummy_input.shape),
+        scale=1.0 / 255.0,
+        bias=[-mean for mean in ordered_mean],
+        color_layout=ct.colorlayout.RGB if config.color_layout == "RGB" else ct.colorlayout.BGR,
+    )
+    if include_argmax:
+        outputs = [ct.TensorType(name="label_map", dtype=np.int32)]
+    else:
+        outputs = [ct.TensorType(name="logits")]
+
+    mlmodel = ct.convert(
+        traced,
+        inputs=[image_input],
+        outputs=outputs,
+        convert_to="mlprogram",
+        minimum_deployment_target=coreml_target(ct, config.minimum_deployment_target),
+        compute_precision=coreml_precision(ct, config.precision),
+    )
+
+    config.output.parent.mkdir(parents=True, exist_ok=True)
+    mlmodel.save(str(config.output))
+    return config.output
+
+
+def _to_onnx_like_config(config: CoreMLExportConfig | CoreMLV3ExportConfig):
     from src.export.onnx import OnnxExportConfig
 
     return OnnxExportConfig(
@@ -95,5 +172,5 @@ def _to_onnx_like_config(config: CoreMLExportConfig):
         decoder_channels=config.decoder_channels,
         dropout=config.dropout,
         device="cpu",
-        include_softmax=config.include_softmax,
+        include_softmax=getattr(config, "include_softmax", False),
     )

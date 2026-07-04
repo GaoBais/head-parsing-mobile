@@ -16,3 +16,4 @@ __pycache__/
 *.pth
 *.ckpt
 !.gitkeep
+.venv/

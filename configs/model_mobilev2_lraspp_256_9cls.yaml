@@ -1,0 +1,21 @@
+# 256-input variant of the 9-class model for the v3 mobile I/O contract.
+# Fully-convolutional: reuses the 320-trained checkpoint directly; run
+# scripts/evaluate.py with this config to apply the v3 acceptance gate
+# (mean_iou drop > 2pt, or mouth/teeth drop > 5pt vs 320 -> fine-tune @256).
+model:
+  name: HeadParsingMobile
+  input_size: [256, 256]
+  num_classes: 9
+  encoder:
+    name: mobilenetv2
+    width_mult: 1.0
+    output_stride: 16
+    pretrained: false
+  decoder:
+    name: lraspp_lite
+    low_level_stride: 4
+    channels: 128
+    dropout: 0.0
+  export:
+    include_softmax: false
+    include_argmax: false

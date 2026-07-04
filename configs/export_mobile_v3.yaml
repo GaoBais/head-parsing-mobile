@@ -1,0 +1,24 @@
+# v3 mobile export: uint8 input, in-graph normalization (std folded into the stem
+# conv), optional in-graph argmax, 256 input. Four artifacts share one checkpoint:
+# - label_map: primary on-device artifact (argmax in-graph).
+# - logits: comparison variant for the Android GPU-delegate A/B (ARG_MAX may fall
+#   back to a CPU partition) and for the export-gate cross-check.
+export_v3:
+  checkpoint: outputs/train/best.pt
+  input_size: [256, 256]
+  model_name: HeadParsingMobile256Mouth2Teeth9ClsV3
+  base_metadata: configs/mobile_metadata_mouth2teeth_9cls.json
+  color_layout: RGB
+  artifacts:
+    - format: tflite
+      output_kind: label_map
+      output: weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_labelmap_fp16.tflite
+    - format: tflite
+      output_kind: logits
+      output: weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_logits_fp16.tflite
+    - format: coreml
+      output_kind: label_map
+      output: weights/HeadParsingMobile256Mouth2Teeth9ClsV3.mlpackage
+    - format: coreml
+      output_kind: logits
+      output: weights/HeadParsingMobile256Mouth2Teeth9ClsV3Logits.mlpackage
