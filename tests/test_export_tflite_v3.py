@@ -155,9 +155,25 @@ class TFLiteV3ExportTests(unittest.TestCase):
             ir = types.ModuleType("litert_converter.mlir.ir")
 
             class IntegerType:
+                def __init__(self, bits, kind):
+                    self.width = bits
+                    self.kind = kind
+                    self.is_unsigned = kind == "unsigned"
+                    self.is_signless = kind == "signless"
+
                 @staticmethod
                 def get_unsigned(bits):
-                    return ("unsigned", bits)
+                    return IntegerType(bits, "unsigned")
+
+                @staticmethod
+                def get_signless(bits):
+                    return IntegerType(bits, "signless")
+
+                def __eq__(self, other):
+                    return isinstance(other, IntegerType) and (self.width, self.kind) == (other.width, other.kind)
+
+                def __repr__(self):
+                    return f"{self.kind}{self.width}"
 
             ir.IntegerType = IntegerType
             mlir.ir = ir
@@ -171,8 +187,12 @@ class TFLiteV3ExportTests(unittest.TestCase):
             def missing_uint8(dtype):
                 raise KeyError(dtype)
 
+            def unsupported_ir(ty):
+                raise RuntimeError(f"Unsupported ir element type: {ty}")
+
             utils.torch_dtype_to_ir_element_type = missing_uint8
             export_utils.torch_dtype_to_ir_element_type = missing_uint8
+            export_utils.ir_element_type_to_torch_dtype = unsupported_ir
 
             sys.modules.update(
                 {
@@ -190,8 +210,16 @@ class TFLiteV3ExportTests(unittest.TestCase):
             converter = types.SimpleNamespace(__name__="litert_torch")
             _patch_litert_uint8_dtype_support(converter)
 
-            self.assertEqual(utils.torch_dtype_to_ir_element_type(torch.uint8), ("unsigned", 8))
-            self.assertEqual(export_utils.torch_dtype_to_ir_element_type(torch.uint8), ("unsigned", 8))
+            self.assertEqual(utils.torch_dtype_to_ir_element_type(torch.uint8), IntegerType.get_unsigned(8))
+            self.assertEqual(export_utils.torch_dtype_to_ir_element_type(torch.uint8), IntegerType.get_unsigned(8))
+            self.assertEqual(
+                export_utils.ir_element_type_to_torch_dtype(IntegerType.get_unsigned(8)),
+                torch.uint8,
+            )
+            self.assertEqual(
+                export_utils.ir_element_type_to_torch_dtype(IntegerType.get_signless(8)),
+                torch.int8,
+            )
         finally:
             for name, module in original_modules.items():
                 if module is None:

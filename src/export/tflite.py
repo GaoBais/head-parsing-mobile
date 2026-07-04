@@ -96,8 +96,9 @@ def _patch_litert_uint8_dtype_support(converter: Any) -> None:
 
     The converter can lower uint8 tensors through StableHLO, but 0.9.1 omits
     ``torch.uint8`` from the PyTorch-dtype-to-MLIR-type helper used while building
-    flat input metadata. Keep the workaround local to the export process instead
-    of asking users to edit site-packages on the server.
+    flat input metadata and from the reverse MLIR-to-PyTorch helper used by the
+    JAX bridge. Keep the workaround local to the export process instead of asking
+    users to edit site-packages on the server.
     """
 
     module_name = getattr(converter, "__name__", "") or converter.__class__.__module__
@@ -132,6 +133,25 @@ def _patch_litert_uint8_dtype_support(converter: Any) -> None:
                 return _original(dtype)
 
         module.torch_dtype_to_ir_element_type = patched
+
+    try:
+        export_utils = importlib.import_module(f"{root}.backend.export_utils")
+    except Exception:
+        return
+
+    original_reverse = getattr(export_utils, "ir_element_type_to_torch_dtype", None)
+    if original_reverse is None:
+        return
+
+    def patched_reverse(ty, _original=original_reverse):
+        if isinstance(ty, ir.IntegerType) and getattr(ty, "width", None) == 8:
+            if getattr(ty, "is_unsigned", False) or str(ty) == "ui8":
+                return torch.uint8
+            if getattr(ty, "is_signless", False) or str(ty) == "i8":
+                return torch.int8
+        return _original(ty)
+
+    export_utils.ir_element_type_to_torch_dtype = patched_reverse
 
 
 def export_tflite(config: TFLiteExportConfig, converter_module: ModuleType | None = None) -> Path:
@@ -188,6 +208,7 @@ def export_tflite_v3(config: TFLiteV3ExportConfig, converter_module: ModuleType 
         channel_last_model = converter.to_channel_last_io(export_model, args=[0])
     else:
         channel_last_model = converter.to_channel_last_io(export_model, args=[0], outputs=[0])
+    channel_last_model.eval()
 
     sample_inputs = (
         torch.randint(
