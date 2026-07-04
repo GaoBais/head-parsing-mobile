@@ -1,0 +1,134 @@
+{
+  "model_name": "HeadParsingMobile256Mouth2Teeth9ClsV3",
+  "run_id": "mouth2teeth_9cls",
+  "task": "head_semantic_segmentation",
+  "io_schema": "v3",
+  "input_size": [
+    256,
+    256
+  ],
+  "input_layout": "NHWC",
+  "input_dtype": "uint8",
+  "output_kind": "label_map",
+  "input": {
+    "name": "image",
+    "shape": [
+      1,
+      256,
+      256,
+      3
+    ],
+    "layout": "NHWC",
+    "color": "RGB",
+    "dtype": "uint8",
+    "resize": "bilinear_to_256x256",
+    "normalization": {
+      "in_graph": true,
+      "mean": [
+        0.485,
+        0.456,
+        0.406
+      ],
+      "std": [
+        0.229,
+        0.224,
+        0.225
+      ],
+      "formula": "((rgb / 255.0) - mean) / std, std folded into the stem conv weights"
+    }
+  },
+  "output": {
+    "name": "label_map",
+    "shape": [
+      1,
+      256,
+      256
+    ],
+    "dtype": "uint8",
+    "activation": "none",
+    "postprocess": "none (argmax in-graph); nearest-neighbor resize mask to display size if needed"
+  },
+  "classes": [
+    {
+      "id": 0,
+      "name": "background",
+      "color": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "id": 1,
+      "name": "skin",
+      "color": [
+        255,
+        85,
+        0
+      ]
+    },
+    {
+      "id": 2,
+      "name": "l_brow",
+      "color": [
+        255,
+        170,
+        0
+      ]
+    },
+    {
+      "id": 3,
+      "name": "r_brow",
+      "color": [
+        255,
+        0,
+        85
+      ]
+    },
+    {
+      "id": 4,
+      "name": "mouth",
+      "color": [
+        85,
+        0,
+        255
+      ]
+    },
+    {
+      "id": 5,
+      "name": "u_lip",
+      "color": [
+        170,
+        0,
+        255
+      ]
+    },
+    {
+      "id": 6,
+      "name": "l_lip",
+      "color": [
+        0,
+        85,
+        255
+      ]
+    },
+    {
+      "id": 7,
+      "name": "teeth",
+      "color": [
+        0,
+        255,
+        255
+      ]
+    },
+    {
+      "id": 8,
+      "name": "hair",
+      "color": [
+        255,
+        255,
+        170
+      ]
+    }
+  ]
+}
