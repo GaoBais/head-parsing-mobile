@@ -85,3 +85,31 @@ Four artifacts + their sibling metadata json files:
 
 plus the val evaluation table (320 vs 256, mean and per-class IoU) for the
 acceptance decision.
+
+## 256 fine-tune
+
+Use this path when the 320 checkpoint's direct 256 evaluation misses the gate.
+`--init-checkpoint` loads only model weights and starts a fresh optimizer/scheduler;
+do not use `--resume` for this because `--resume` is for interrupted same-run
+training.
+
+```bash
+python scripts/train.py \
+    --init-checkpoint outputs/train_mouth2teeth_9cls_full_v1/best.pt \
+    --model-config configs/model_mobilev2_lraspp_256_9cls.yaml \
+    --dataset-config configs/dataset_mouth2teeth_9cls.yaml \
+    --train-config configs/train_mouth2teeth_9cls_finetune_256.yaml \
+    --output-dir outputs/train_mouth2teeth_9cls_256_ft_v1 \
+    --device cuda
+
+python scripts/evaluate.py \
+    --checkpoint outputs/train_mouth2teeth_9cls_256_ft_v1/best.pt \
+    --model-config configs/model_mobilev2_lraspp_256_9cls.yaml \
+    --dataset-config configs/dataset_mouth2teeth_9cls.yaml \
+    --train-config configs/train_mouth2teeth_9cls_finetune_256.yaml \
+    --split val --device cuda \
+    --output-dir outputs/eval_256_v3_ft
+```
+
+If the fine-tuned checkpoint passes the 256 gate, re-run v3 export with that
+checkpoint so the SDK receives artifacts built from the accepted weights.

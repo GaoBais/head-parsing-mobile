@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Any
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 if str(PROJECT_ROOT) not in sys.path:
@@ -18,6 +19,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train-config", type=Path, default=Path("configs/train_student.yaml"))
     parser.add_argument("--output-dir", type=Path, default=Path("outputs/train"))
     parser.add_argument("--resume", type=Path, default=None)
+    parser.add_argument(
+        "--init-checkpoint",
+        type=Path,
+        default=None,
+        help="Initialize model weights from a checkpoint, but start a fresh optimizer/scheduler.",
+    )
     parser.add_argument("--device", type=str, default="cuda")
     parser.add_argument("--disable-teacher", action="store_true", help="Ignore teacher/distillation config.")
     return parser.parse_args()
@@ -60,6 +67,23 @@ def teacher_backbone_from_name(name: str) -> str:
     raise ValueError(f"Unsupported teacher model name: {name}")
 
 
+def strip_module_prefix(state_dict: dict[str, Any]) -> dict[str, Any]:
+    if not any(key.startswith("module.") for key in state_dict):
+        return state_dict
+    return {key.removeprefix("module."): value for key, value in state_dict.items()}
+
+
+def resolve_model_state_dict(checkpoint: Any) -> dict[str, Any]:
+    if isinstance(checkpoint, dict):
+        for key in ("model", "state_dict", "model_state_dict"):
+            value = checkpoint.get(key)
+            if isinstance(value, dict):
+                return strip_module_prefix(value)
+        if checkpoint and all(hasattr(value, "shape") for value in checkpoint.values()):
+            return strip_module_prefix(checkpoint)
+    raise ValueError("Could not resolve a model state_dict from checkpoint.")
+
+
 def build_train_transform_kwargs(train_cfg: dict) -> dict:
     from src.utils.config import get_nested
 
@@ -98,6 +122,8 @@ def build_train_transform_kwargs(train_cfg: dict) -> dict:
 
 def main() -> None:
     args = parse_args()
+    if args.resume is not None and args.init_checkpoint is not None:
+        raise SystemExit("--resume and --init-checkpoint are mutually exclusive.")
     torch = require_torch()
 
     from torch.utils.data import DataLoader
@@ -221,7 +247,11 @@ def main() -> None:
 
     start_epoch = 0
     best_miou = 0.0
-    if args.resume is not None:
+    if args.init_checkpoint is not None:
+        init_checkpoint = load_checkpoint(resolve_project_path(args.init_checkpoint), map_location=device)
+        model.load_state_dict(resolve_model_state_dict(init_checkpoint))
+        print(f"Initialized model weights from {args.init_checkpoint}")
+    elif args.resume is not None:
         checkpoint = load_checkpoint(args.resume, map_location=device)
         model.load_state_dict(checkpoint["model"])
         optimizer.load_state_dict(checkpoint["optimizer"])
