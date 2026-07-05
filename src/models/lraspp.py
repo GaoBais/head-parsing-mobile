@@ -9,6 +9,23 @@ from torch import nn
 from src.models.mobilenetv2 import ConvBNActivation
 
 
+class GlobalAvgPool(nn.Module):
+    """Global average pool to ``[N, C, 1, 1]``.
+
+    Mathematically identical to ``nn.AdaptiveAvgPool2d(1)`` (mean over the full
+    spatial extent), but it traces to a plain reduce-mean instead of the
+    ``SUM + GATHER_ND`` pattern the LiteRT/ai-edge Torch converter emits for
+    ``AdaptiveAvgPool2d``. ``GATHER_ND`` is not supported by the TFLite GPU
+    delegate, and its presence in the LR-ASPP scale branch un-delegates the
+    entire decoder head (SE gating + both bilinear upsamples), forcing it onto
+    slow CPU reference kernels — the v3 256 export inference regression. Being
+    weight-free, this swap needs no retraining and reuses the same checkpoint.
+    """
+
+    def forward(self, x: torch.Tensor) -> torch.Tensor:
+        return x.mean(dim=(2, 3), keepdim=True)
+
+
 class SeparableConvBNReLU(nn.Sequential):
     def __init__(self, in_channels: int, out_channels: int) -> None:
         super().__init__(
@@ -32,7 +49,7 @@ class LRASPPHead(nn.Module):
         super().__init__()
         self.high_project = ConvBNActivation(high_channels, decoder_channels, kernel_size=1)
         self.scale = nn.Sequential(
-            nn.AdaptiveAvgPool2d(1),
+            GlobalAvgPool(),
             nn.Conv2d(high_channels, decoder_channels, kernel_size=1, bias=True),
             nn.Sigmoid(),
         )
