@@ -1,0 +1,24 @@
+{
+  "ok": true,
+  "threshold": 0.99,
+  "artifacts": [
+    {
+      "artifact": "tflite/label_map",
+      "agreement": 1.0,
+      "threshold": 0.99,
+      "total_pixels": 65536,
+      "mismatched_pixels": 0,
+      "ok": true
+    },
+    {
+      "artifact": "tflite/logits",
+      "agreement": 1.0,
+      "threshold": 0.99,
+      "total_pixels": 65536,
+      "mismatched_pixels": 0,
+      "ok": true
+    }
+  ],
+  "image": "reports/mouth2teeth_9cls_full_v1/sample_gallery_val.jpg",
+  "skipped": []
+}

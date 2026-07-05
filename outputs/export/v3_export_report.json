@@ -1,0 +1,22 @@
+{
+  "checkpoint": "/home/vtai/hengxing/head_parsing/outputs/train_mouth2teeth_9cls_256_ft_v1/best.pt",
+  "input_size": [
+    256,
+    256
+  ],
+  "model_name": "HeadParsingMobile256Mouth2Teeth9ClsV3",
+  "artifacts": [
+    {
+      "format": "tflite",
+      "output_kind": "label_map",
+      "path": "/home/vtai/hengxing/head_parsing/weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_labelmap_fp16.tflite",
+      "metadata": "/home/vtai/hengxing/head_parsing/weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_labelmap_fp16_metadata.json"
+    },
+    {
+      "format": "tflite",
+      "output_kind": "logits",
+      "path": "/home/vtai/hengxing/head_parsing/weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_logits_fp16.tflite",
+      "metadata": "/home/vtai/hengxing/head_parsing/weights/head_parsing_mobile_256_mouth2teeth_9cls_v3_logits_fp16_metadata.json"
+    }
+  ]
+}
